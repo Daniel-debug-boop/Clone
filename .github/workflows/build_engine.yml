@@ -9,15 +9,41 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install Build Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential scons pkg-config libx11-dev             libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu1-mesa-dev             libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev             libwayland-dev zstd libzstd-dev
+          sudo apt-get install -y build-essential scons pkg-config libx11-dev             libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu1-mesa-dev             libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev             libwayland-dev zstd libzstd-dev git-lfs
 
-      - name: Link Modules into Godot Source
+      - name: Clone Godot Engine & All 19 Modules Fresh
+        run: |
+          mkdir -p modules
+          cd modules
+          
+          echo "Cloning Godot Core..."
+          git clone --recursive https://github.com/NVIDIA-RTX/godot.git godot-engine
+          
+          echo "Cloning Modules..."
+          git clone --recursive https://github.com/godot-jolt/godot-jolt.git jolt_physics
+          git clone --recursive https://github.com/NVIDIA-RTX/RTXDI.git RTXDI
+          git clone --recursive https://github.com/NVIDIA-RTX/NRD.git NRD
+          git clone --recursive https://github.com/zeux/meshoptimizer.git meshoptimizer
+          git clone --recursive https://github.com/CesiumGS/cesium-godot.git cesium
+          git clone --recursive https://github.com/TokisanGames/Terrain3D.git terrain_3d
+          git clone --recursive https://github.com/TheDuckCow/godot-road-generator.git godot-road-generator
+          git clone --recursive https://github.com/HungryProton/scatter.git scatter
+          git clone --recursive https://github.com/gboeing/osmnx.git osmnx
+          git clone --recursive https://github.com/ValveSoftware/steam-audio.git steam_audio
+          git clone --recursive https://github.com/recastnavigation/recastnavigation.git recastnavigation
+          git clone --recursive https://github.com/limboai/limboai.git limbo_ai
+          git clone --recursive https://github.com/limboai/godot-debug-draw-3d.git DebugDraw3D
+          git clone --recursive https://github.com/2shady4you/godot-sqlite.git godot_sqlite
+          git clone --recursive https://github.com/RaidTheory/Godot-Mixamo-Animation-Retargeter.git Godot-Mixamo-Animation-Retargeter
+          git clone --recursive https://github.com/gdquest-demos/godot-4-3d-third-person-controller.git godot-4-3d-third-person-controller
+          git clone --recursive https://github.com/nathanhoad/godot_dialogue_manager.git godot_dialogue_manager
+          git clone --recursive https://github.com/gluttony/Gloot.git Gloot
+
+      - name: Link Modules into Godot Source Tree
         run: |
           cd modules/godot-engine/modules
           ln -s ../jolt_physics jolt_physics
@@ -38,7 +64,7 @@ jobs:
 
       - name: Compile Monolithic Engine
         env:
-          SCONS_CACHE: ${{ github.workspace }}/.scons-cache
+          SCONS_CACHE: ${{ github.workspace }}.scons-cache
         run: |
           cd modules/godot-engine
           scons platform=linuxbsd target=editor arch=x86_64 precision=double use_lto=yes use_static_cpp=yes -j$(nproc)
