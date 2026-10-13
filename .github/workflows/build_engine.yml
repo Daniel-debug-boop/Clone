@@ -1,0 +1,50 @@
+name: Build Custom Monolithic Godot Engine
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential scons pkg-config libx11-dev             libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu1-mesa-dev             libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev             libwayland-dev zstd libzstd-dev
+
+      - name: Link Modules into Godot Source
+        run: |
+          cd modules/godot-engine/modules
+          ln -s ../jolt_physics jolt_physics
+          ln -s ../cesium cesium
+          ln -s ../meshoptimizer meshoptimizer
+          ln -s ../terrain_3d terrain_3d
+          ln -s ../steam_audio steam_audio
+          ln -s ../limbo_ai limbo_ai
+          ln -s ../godot_sqlite godot_sqlite
+
+      - name: Set up SCons Cache
+        uses: actions/cache@v4
+        with:
+          path: .scons-cache
+          key: ${{ runner.os }}-scons-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-scons-
+
+      - name: Compile Monolithic Engine
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons-cache
+        run: |
+          cd modules/godot-engine
+          scons platform=linuxbsd target=editor arch=x86_64 precision=double use_lto=yes use_static_cpp=yes -j$(nproc)
+
+      - name: Upload Compiled Binary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: custom-godot-editor-linux
+          path: modules/godot-engine/bin/godot.linuxbsd.editor.double.x86_64
