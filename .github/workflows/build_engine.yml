@@ -1,76 +1,168 @@
 name: Build Custom Monolithic Godot Engine
 
+# Manual only: this compiles a whole Godot engine (~1-3h) on every run.
 on:
   workflow_dispatch:
+    inputs:
+      engine_ref:
+        description: "Engine git ref to build (empty = repository default branch)"
+        required: false
+        default: ""
+        type: string
+      link_modules:
+        description: "Manifest keys of modules to link (comma separated, empty = engine-only baseline)"
+        required: false
+        default: ""
+        type: string
+      lto:
+        description: "Link-time optimization for the optimized build"
+        required: false
+        default: full
+        type: choice
+        options:
+          - none
+          - thin
+          - full
+      run_startup_test:
+        description: "Run the built binary's headless startup check"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "build-engine-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  ENGINE_KEY: godot-engine
+  ENGINE_DIR: ${{ github.workspace }}/modules/godot-engine
+  # SCons cache directory. MUST stay in sync with the actions/cache `path` below.
+  # `SCONS_CACHE` is the deprecated fallback; the engine prefers the `cache_path`
+  # SCons argument, so both are passed to the same directory.
+  SCONS_CACHE: ${{ github.workspace }}/.scons-cache
 
 jobs:
   build:
+    name: Monolithic editor (linuxbsd, double)
     runs-on: ubuntu-latest
+    timeout-minutes: 330
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # This repository tracks 14 gitlinks under modules/ but has NO .gitmodules,
+          # so `git submodule update --init` fails with "no submodule mapping found".
+          # Engine and module sources are cloned explicitly in the next step instead.
+          submodules: false
+          fetch-depth: 1
 
-      - name: Install Build Dependencies
+      - name: Install build dependencies
         run: |
+          set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y build-essential scons pkg-config libx11-dev             libxcursor-dev libxinerama-dev libgl1-mesa-dev libglu1-mesa-dev             libasound2-dev libpulse-dev libudev-dev libxi-dev libxrandr-dev             libwayland-dev zstd libzstd-dev git-lfs
+          sudo apt-get install -y --no-install-recommends \
+            build-essential scons pkg-config python3 \
+            libx11-dev libxcursor-dev libxi-dev libxinerama-dev libxrandr-dev \
+            libgl1-mesa-dev libglu1-mesa-dev \
+            libasound2-dev libpulse-dev \
+            libudev-dev libdbus-1-dev libfontconfig1-dev \
+            libwayland-dev libdecor-0-dev libspeechd-dev \
+            libzstd-dev
+          echo "--- toolchain ---"
+          scons --version | head -5
+          gcc --version | head -1
 
-      - name: Clone Godot Engine & All 19 Modules Fresh
-        run: |
-          mkdir -p modules
-          cd modules
-          
-          echo "Cloning Godot Core..."
-          git clone --recursive https://github.com/NVIDIA-RTX/godot.git godot-engine
-          
-          echo "Cloning Modules..."
-          git clone --recursive https://github.com/godot-jolt/godot-jolt.git jolt_physics
-          git clone --recursive https://github.com/NVIDIA-RTX/RTXDI.git RTXDI
-          git clone --recursive https://github.com/NVIDIA-RTX/NRD.git NRD
-          git clone --recursive https://github.com/zeux/meshoptimizer.git meshoptimizer
-          git clone --recursive https://github.com/CesiumGS/cesium-godot.git cesium
-          git clone --recursive https://github.com/TokisanGames/Terrain3D.git terrain_3d
-          git clone --recursive https://github.com/TheDuckCow/godot-road-generator.git godot-road-generator
-          git clone --recursive https://github.com/HungryProton/scatter.git scatter
-          git clone --recursive https://github.com/gboeing/osmnx.git osmnx
-          git clone --recursive https://github.com/ValveSoftware/steam-audio.git steam_audio
-          git clone --recursive https://github.com/recastnavigation/recastnavigation.git recastnavigation
-          git clone --recursive https://github.com/limboai/limboai.git limbo_ai
-          git clone --recursive https://github.com/limboai/godot-debug-draw-3d.git DebugDraw3D
-          git clone --recursive https://github.com/2shady4you/godot-sqlite.git godot_sqlite
-          git clone --recursive https://github.com/RaidTheory/Godot-Mixamo-Animation-Retargeter.git Godot-Mixamo-Animation-Retargeter
-          git clone --recursive https://github.com/gdquest-demos/godot-4-3d-third-person-controller.git godot-4-3d-third-person-controller
-          git clone --recursive https://github.com/nathanhoad/godot_dialogue_manager.git godot_dialogue_manager
-          git clone --recursive https://github.com/gluttony/Gloot.git Gloot
-
-      - name: Link Modules into Godot Source Tree
-        run: |
-          cd modules/godot-engine/modules
-          ln -s ../jolt_physics jolt_physics
-          ln -s ../cesium cesium
-          ln -s ../meshoptimizer meshoptimizer
-          ln -s ../terrain_3d terrain_3d
-          ln -s ../steam_audio steam_audio
-          ln -s ../limbo_ai limbo_ai
-          ln -s ../godot_sqlite godot_sqlite
-
-      - name: Set up SCons Cache
+      - name: Restore SCons cache
         uses: actions/cache@v4
         with:
           path: .scons-cache
-          key: ${{ runner.os }}-scons-${{ github.sha }}
+          # run_id keeps the key unique so an updated cache is always saved;
+          # restore-keys pick up the most recent one for this branch.
+          key: scons-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.github/scripts/modules.manifest.tsv') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-scons-
+            scons-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('.github/scripts/modules.manifest.tsv') }}-
+            scons-${{ runner.os }}-${{ github.ref_name }}-
+            scons-${{ runner.os }}-
 
-      - name: Compile Monolithic Engine
+      - name: Plan integration
         env:
-          SCONS_CACHE: ${{ github.workspace }}.scons-cache
-        run: |
-          cd modules/godot-engine
-          scons platform=linuxbsd target=editor arch=x86_64 precision=double use_lto=yes use_static_cpp=yes -j$(nproc)
+          WORKSPACE: ${{ github.workspace }}
+        run: bash .github/scripts/integrate_engine_modules.sh plan
 
-      - name: Upload Compiled Binary Artifact
+      - name: Check required repositories are reachable
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          ENGINE_REF: ${{ inputs.engine_ref }}
+          LINK_MODULES: ${{ inputs.link_modules }}
+        run: bash .github/scripts/integrate_engine_modules.sh check-remote
+
+      - name: Fetch engine and module sources
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          ENGINE_REF: ${{ inputs.engine_ref }}
+          LINK_MODULES: ${{ inputs.link_modules }}
+        run: bash .github/scripts/integrate_engine_modules.sh fetch
+
+      - name: Validate sources, module registration and duplicates
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          ENGINE_REF: ${{ inputs.engine_ref }}
+          LINK_MODULES: ${{ inputs.link_modules }}
+        run: bash .github/scripts/integrate_engine_modules.sh validate
+
+      - name: Link modules into the engine source tree
+        env:
+          WORKSPACE: ${{ github.workspace }}
+          ENGINE_REF: ${{ inputs.engine_ref }}
+          LINK_MODULES: ${{ inputs.link_modules }}
+        run: |
+          bash .github/scripts/integrate_engine_modules.sh link
+          echo "--- engine modules/ ---"
+          ls -la "$ENGINE_DIR/modules" | tail -20
+
+      # Step 8a: baseline build, default options only. This is the integration
+      # smoke test: if it fails, the failure is in the sources, not in LTO.
+      - name: Compile engine (baseline)
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons-cache
+        run: |
+          set -euo pipefail
+          cd "$ENGINE_DIR"
+          scons \
+            platform=linuxbsd target=editor arch=x86_64 precision=double \
+            cache_path="$SCONS_CACHE" redirect_build_objects=no \
+            -j"$(nproc)"
+
+      # Step 8b: optimized build. `lto=` is the engine's option (there is no
+      # `use_lto` in this engine); `use_static_cpp` defaults to yes on linuxbsd.
+      - name: "Compile engine (optimized: LTO + static C++)"
+        if: ${{ inputs.lto != 'none' }}
+        env:
+          SCONS_CACHE: ${{ github.workspace }}/.scons-cache
+        run: |
+          set -euo pipefail
+          cd "$ENGINE_DIR"
+          scons \
+            platform=linuxbsd target=editor arch=x86_64 precision=double \
+            lto=${{ inputs.lto }} use_static_cpp=yes \
+            cache_path="$SCONS_CACHE" redirect_build_objects=no \
+            -j"$(nproc)"
+
+      # Step 9: prove the artifact is real before publishing it.
+      - name: Verify executable
+        id: verify
+        env:
+          RUN_STARTUP_TEST: ${{ inputs.run_startup_test }}
+        run: |
+          bash .github/scripts/verify_engine_binary.sh "$ENGINE_DIR" 'godot.linuxbsd.editor*'
+
+      - name: Upload compiled binary
         uses: actions/upload-artifact@v4
         with:
           name: custom-godot-editor-linux
-          path: modules/godot-engine/bin/godot.linuxbsd.editor.double.x86_64
+          path: ${{ steps.verify.outputs.binary }}
+          if-no-files-found: error
+          retention-days: 14
