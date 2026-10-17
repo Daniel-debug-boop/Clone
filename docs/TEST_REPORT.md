@@ -1,9 +1,9 @@
 # Test report
 
-Generated: 2026-10-17T11:01:43Z
+Generated: 2026-10-17T12:03:45Z
 
 - Godot: `4.6.3.stable.official.7d41c59c4`
-- Commit: `fa1d02cbbfb0507c98a292d90033c0f487a644c0`
+- Commit: `4a467c2`
 
 ## Build report
 ```json
@@ -24,7 +24,8 @@ Generated: 2026-10-17T11:01:43Z
     "region": "Kyoto Central",
     "terrain_source": "AWS Open Data terrain-tiles (Terrarium)",
     "osm_source": "OpenStreetMap via Overpass (ODbL 1.0)",
-    "materials_source": "Poly Haven (CC0 1.0)"
+    "materials_source": "Poly Haven (CC0 1.0)",
+    "plateau_source": "PLATEAU (MLIT Japan)"
   },
   "checks": {
     "import": "pass",
@@ -33,34 +34,39 @@ Generated: 2026-10-17T11:01:43Z
     "export": "pass",
     "packaged_smoke": "pass"
   },
-  "generated_utc": "2026-10-17T11:00:05Z"
+  "generated_utc": "2026-10-17T12:00:05Z"
 }
 ```
 
-## Static + data validation (55 assertions)
+## Static + data validation (59 assertions)
 ```
   PASS  autoload SettingsManager -> res://scripts/autoload/settings_manager.gd
 
 === summary ===
-passed: 55   warnings: 0   failures: 0
+passed: 59   warnings: 0   failures: 0
 
 RESULT: PASS
 ```
 
-## Runtime smoke test (15 assertions)
+## Runtime smoke test (20 assertions)
 ```
   PASS  GameManager autoload present
   PASS  SettingsManager autoload present
   PASS  draw distance configured: 1400 m
   PASS  terrain node exists
-  PASS  terrain streamed 97 chunks around the player
+  PASS  terrain streamed 99 chunks around the player
   PASS  terrain covers 4007 x 3980 m
   PASS  elevation sampling works (centre 55.5 m, offset 43.9 m)
   PASS  OSM buildings parsed: 61368 footprints
   PASS  OSM roads parsed: 8500 ways
-  PASS  city geometry streamed in 97 chunks
-  PASS  player spawned at (-231.2809, 48.00214, -218.2667)
-  PASS  player is above terrain (1.00 m)
+  PASS  city geometry streamed in 99 chunks
+  PASS  PLATEAU streamed 60 real building tiles
+  PASS  PLATEAU geometry decoded: 2053158 vertices
+  PASS  no PLATEAU tiles failed to load
+  PASS  PLATEAU coverage lookup works
+  PASS  OSM fallback boxes suppressed under PLATEAU coverage (24832)
+  PASS  player spawned at (-82.30573, 49.03061, 55.08128)
+  PASS  player is above terrain (-1.03 m)
   PASS  8 lantern objectives placed
   PASS  GameManager objective total matches placed lanterns (8)
   PASS  player did not fall through terrain after physics step
@@ -72,7 +78,7 @@ RESULT: PASS
 Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 
 [smoke] booting world directly
-[smoke] terrain_chunks=97 city_chunks=97 lanterns=8 player=yes
+[smoke] terrain_chunks=99 city_chunks=99 lanterns=8 player=yes
 [smoke] RESULT: PASS
 ```
 
@@ -83,7 +89,9 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 | Packaged game to world-ready (headless) | 4.13 s |
 | Packaged game peak RSS | 397.5 MB |
 | Headless asset import | 4.49 s / 625.6 MB peak |
-| Terrain + city chunks resident | 97 + 97 |
+| Terrain + city chunks resident | 99 + 99 |
+| PLATEAU tiles streamed | 60 |
+| PLATEAU decoded triangles | 2,053,158 |
 
 ## Artifact checksums
 ```

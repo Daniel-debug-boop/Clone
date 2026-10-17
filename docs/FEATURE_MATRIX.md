@@ -67,10 +67,10 @@ Evidence column names the exact check that proves the claim.
 | Reproducible data pipeline | Implemented & tested | `tools/build_world.py`, cached + `--force` |
 | Pinned engine + templates with SHA-256 | Implemented & tested | checksums enforced in `build_release.sh` |
 | Asset hashing manifest | Implemented & tested | `DEPENDENCIES.lock`, `ASSET_MANIFEST.md` generated from real hashes |
-| Static validation suite | Implemented & tested | 55 assertions, exit 0 |
-| Runtime smoke test | Implemented & tested | 15 assertions, exit 0 |
+| Static validation suite | Implemented & tested | 59 assertions, exit 0 (incl. PLATEAU index/offset/source/vertical-offset checks) |
+| Runtime smoke test | Implemented & tested | 20 assertions, exit 0 (terrain, OSM, PLATEAU streaming, lantern objectives) |
 | Packaged-build smoke test | Implemented & tested | exported binary exits 0 |
-| Colab notebook | Implemented, partially validated | JSON validated; not executed inside Colab in this environment |
+| Colab notebook | Implemented, unverified | Notebook lists the PLATEAU fetch step (DracoPy-dependent); not executed inside this environment |
 | CI workflow | Implemented, unverified | Authored; not yet run on GitHub-hosted runners |
 | meshoptimizer offline bake | Not implemented | See `BUILD.md` rationale |
 | Terrain3D native addon | Not implemented (evaluated) | No prebuilt binaries; see `BUILD.md` |
