@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://probe_capture_methods0001"]
+
+[ext_resource type="Script" path="res://tests/probe_capture_methods.gd" id="1_probe"]
+
+[node name="ProbeCaptureMethods" type="Node"]
+script = ExtResource("1_probe")

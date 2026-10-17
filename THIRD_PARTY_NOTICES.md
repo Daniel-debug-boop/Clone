@@ -111,11 +111,10 @@ Exact file names and SHA-256 values are recorded in `ASSET_MANIFEST.md` and
 - **Used for:** the real building geometry streamed as `assets/plateau/**/*.pmesh`.
 - **Project:** "Project PLATEAU", the Ministry of Land, Infrastructure, Transport and Tourism
   (国土交通省, MLIT) 3D city-model initiative — https://www.mlit.go.jp/plateau/
-- **Dataset used:** `26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_*_lod2_no_texture`,
-  published through the PLATEAU View asset CDN (`assets.cms.plateau.reearth.io`). Five Kyoto
-  wards inside the playable region: kamigyo-ku (上京区), sakyo-ku (左京区), nakagyo-ku (中京区),
-  higashiyama-ku (東山区), shimogyo-ku (下京区) — 193 tiles, 5,838,624 vertices,
-  1,946,208 triangles.
+- **Dataset used:** Kyoto City 3D Tiles (LOD2, noTexture variant), published through the
+  PLATEAU View asset CDN (`assets.cms.plateau.reearth.io`). Five Kyoto wards inside the
+  playable region: kamigyo-ku (上京区), sakyo-ku (左京区), nakagyo-ku (中京区),
+  higashiyama-ku (東山区), shimogyo-ku (下京区) — 193 tiles, 1,946,208 triangles.
 - **Discovery API:** https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets
 - **Licence:** **Public Data License 1.0 (公共データ利用規約 第1.0版)**, the MLIT terms of use.
   MLIT states this rule is compatible with **CC BY 4.0** and permits use under CC BY, ODC BY

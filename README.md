@@ -146,7 +146,7 @@ docs/                      feature matrix, test report
 
 This is an **implemented, playable vertical slice** of a real Japanese location — not a
 completed commercial open-world game. The region is deliberately bounded to a 4 km square so
-that terrain, roads, buildings, collision, streaming and performance can actually be validated.
+that terrain, roads, buildings, PLATEAU 3D city geometry, collision, streaming and performance can actually be validated.
 Expanding the region is a matter of changing the bounding box in `tools/build_world.py` and
 re-running the pipeline; the streaming architecture already supports it.
 

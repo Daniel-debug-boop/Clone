@@ -137,17 +137,82 @@ chunks** around the spawn point.
 
 ---
 
-## Reproducibility
+## PLATEAU 3D city models (optional)
 
-- Engine and templates are pinned by URL **and** SHA-256.
-- Every asset is pinned by URL and SHA-256 in `DEPENDENCIES.lock` / `ASSET_MANIFEST.md`.
-- `tools/build_world.py` and `tools/fetch_assets.py` skip already-verified downloads.
-- The generated data is deterministic for a given source snapshot; bump the OSM snapshot by
-  deleting `assets/world/*.json` and re-running.
+The build can optionally convert real Kyoto building geometry from **Project PLATEAU**
+(MLIT) into Godot `.pmesh` files via `tools/fetch_plateau.py`.
+
+### What it does
+
+`tools/fetch_plateau.py` discovers the official PLATEAU 3D Tiles datasets for Kyoto,
+downloads the Draco-compressed `b3dm` tiles, decodes them with DracoPy, and writes
+Godot `.pmesh` files under `assets/plateau/`. A streaming loader
+(`scripts/world/plateau_city.gd`) overlays the real geometry over the OSM box buildings.
+
+### Requirements
+
+| Requirement | Version | Notes |
+|---|---|---|
+| `DracoPy` | any | `python3 -m pip install DracoPy` |
+| Network access to `assets.cms.plateau.reearth.io` | — | PLATEAU tile CDN |
+| Disk | ~150 MB | 193 tiles, ~1.95M triangles (Kyoto 5 wards) |
+
+### Run
+
+```bash
+python3 -m pip install DracoPy
+python3 tools/fetch_plateau.py
+```
+
+The `.pmesh` payloads are **gitignored** (see `.gitignore`); only
+`assets/plateau/index.json` and `assets/plateau/manifest.json` are committed. To
+regenerate the meshes, delete the ward subdirectories under `assets/plateau/` and
+re-run `tools/fetch_plateau.py`.
+
+### Skipping
+
+If DracoPy is not installed or the network is unavailable, the build continues with
+OSM box buildings only. The build script and Colab notebook both guard the step:
+`tools/build_release.sh --skip-plateau`, and the Colab cell catches missing
+DracoPy and prints a warning.
+
+### Licence
+
+PLATEAU uses the **Public Data License 1.0 (PDL 1.0)**, which MLIT states is
+compatible with CC BY 4.0. Attribution is required (both in-game and in
+`THIRD_PARTY_NOTICES.md`). See `THIRD_PARTY_NOTICES.md` section 6 for the exact
+required notice.
 
 ---
 
-## Troubleshooting
+## Visual capture (screenshots)
+
+The test harness `tests/capture_screenshots.gd` / `.tscn` can render annotated
+screenshots of the running game to `user://screenshots/`. This is for **manual visual
+validation on real hardware**, not for headless CI.
+
+### Known limitation
+
+Godot's **headless OpenGL mode** (the dummy renderer used in `--headless`) does **not**
+produce readable viewport textures: `get_viewport().get_texture().get_image()` and
+SubViewport textures both return `null`. This is a fundamental limitation of the dummy
+renderer, not a bug in the harness. Screenshot capture therefore:
+
+- works only with a real display + a real OpenGL/Vulkan context (windowed or Xvfb);
+- does **not** work in `--headless` mode;
+- is **not** part of the automated build pipeline.
+
+To capture on a machine with a display:
+
+```bash
+DISPLAY=:99 godot --path . --rendering-driver opengl3 \
+    --resolution 1600x900 --windowed res://tests/capture_screenshots.tscn
+```
+
+(With Xvfb: see `tools/setup_software_display.sh`.) The harness writes PNGs to
+`user://screenshots/` (i.e. `~/.local/share/godot/app_userdata/Japan Open World/screenshots/`).
+
+### Troubleshooting
 
 | Symptom | Cause / fix |
 |---|---|
@@ -157,3 +222,5 @@ chunks** around the spawn point.
 | Terrain is flat / empty | `assets/terrain/heightmap.f32` missing → run `python3 tools/build_world.py`. |
 | No buildings in the game | `assets/world/buildings.dat` missing or magic invalid → run `python3 tools/build_world.py`. |
 | `Could not parse global class` | A GDScript parse error; run `godot --headless --path . --import` and read the first `SCRIPT ERROR`. |
+| PLATEAU tiles not showing | Run `python3 tools/fetch_plateau.py` (requires DracoPy); check `build_output/logs/plateau_fetch.log`. |
+| Screenshots save to `null` / capture produces 0 PNGs | Headless mode cannot read back viewport textures. Run with a real display (Xvfb or physical monitor). |

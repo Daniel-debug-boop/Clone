@@ -1,11 +1,10 @@
 extends Node
 
 const WORLD_SCENE := "res://scenes/main_world.tscn"
-const OUT_DIR := "res://build_output/screenshots"
+const OUT_DIR := "user://screenshots"
 
 var _world: Node3D
 var _player: Node3D
-var _cam: Camera3D
 var _saved: Array[String] = []
 
 func _ready() -> void:
@@ -23,13 +22,6 @@ func _ready() -> void:
 			print("  warmup %d/20 frames, %.1fs" % [i + 1, (Time.get_ticks_msec() - t0) / 1000.0])
 	_report_world()
 	_player = _world.get_node_or_null("Player")
-	_cam = Camera3D.new()
-	_cam.fov = 65.0
-	_cam.far = 6000.0
-	_cam.near = 0.15
-	get_tree().root.add_child(_cam)
-	_cam.current = true
-	await get_tree().process_frame
 	await _shot_vista()
 	await _shot_street_level()
 	await _shot_character()
@@ -73,69 +65,69 @@ func _place_player(x: float, z: float) -> void:
 	for _i in range(3):
 		await get_tree().process_frame
 
-func _aim(from: Vector3, at: Vector3, fov: float = 65.0) -> void:
-	_cam.global_position = from
-	_cam.fov = fov
-	_cam.look_at(at, Vector3.UP)
-
 func _shot_vista() -> void:
 	await _place_player(-300.0, -500.0)
 	var from := Vector3(-620.0, 150.0, -980.0)
 	var at := Vector3(200.0, 60.0, 200.0)
-	_aim(from, at, 62.0)
 	for _i in range(3):
 		await get_tree().process_frame
-	await _save("01_kyoto_vista")
+	await _save("01_kyoto_vista", from, at, 62.0)
 
 func _shot_street_level() -> void:
 	await _place_player(-120.0, -420.0)
 	var terrain = _world.get_node_or_null("Terrain")
 	var y: float = terrain.get_height_at(-60.0, -380.0) + 3.0 if terrain else 3.0
-	_aim(Vector3(-60.0, y, -380.0), Vector3(120.0, y + 6.0, -250.0), 70.0)
+	var from := Vector3(-60.0, y, -380.0)
+	var at := Vector3(120.0, y + 6.0, -250.0)
 	for _i in range(3):
 		await get_tree().process_frame
-	await _save("02_street_level")
+	await _save("02_street_level", from, at, 70.0)
 
 func _shot_character() -> void:
 	await _place_player(-200.0, -300.0)
 	if _player:
 		var p := _player.global_position
-		_aim(p + Vector3(4.5, 3.2, 6.0), p + Vector3(0, 1.2, 0), 60.0)
-	for _i in range(3):
-		await get_tree().process_frame
-	await _save("03_character")
+		var from := p + Vector3(4.5, 3.2, 6.0)
+		var at := p + Vector3(0, 1.2, 0)
+		for _i in range(3):
+			await get_tree().process_frame
+		await _save("03_character", from, at, 60.0)
 
 func _shot_distant() -> void:
 	await _place_player(-900.0, -900.0)
-	_aim(Vector3(-1500.0, 520.0, -1500.0), Vector3(0.0, 40.0, 0.0), 55.0)
+	var from := Vector3(-1500.0, 520.0, -1500.0)
+	var at := Vector3(0.0, 40.0, 0.0)
 	for _i in range(4):
 		await get_tree().process_frame
-	await _save("04_distant_lod")
+	await _save("04_distant_lod", from, at, 55.0)
 
 func _shot_materials() -> void:
 	await _place_player(60.0, -260.0)
 	var terrain = _world.get_node_or_null("Terrain")
 	var y: float = terrain.get_height_at(60.0, -260.0) + 2.2 if terrain else 2.2
-	_aim(Vector3(60.0, y, -260.0), Vector3(110.0, y + 1.0, -320.0), 45.0)
+	var from := Vector3(60.0, y, -260.0)
+	var at := Vector3(110.0, y + 1.0, -320.0)
 	for _i in range(3):
 		await get_tree().process_frame
-	await _save("05_materials")
+	await _save("05_materials", from, at, 45.0)
 
-func _save(name: String) -> void:
-	# frame_post_draw never fires when the driver produces no frames, so wait
-	# for it with a hard bound instead of suspending forever.
-	var drawn := false
-	RenderingServer.frame_post_draw.connect(func(): drawn = true, CONNECT_ONE_SHOT)
-	var waited := 0
-	while not drawn and waited < 60:
-		await get_tree().process_frame
-		waited += 1
-	var img := get_viewport().get_texture().get_image()
-	var path := "%s/%s.png" % [OUT_DIR, name]
+func _save(name: String, from: Vector3, at: Vector3, fov: float) -> void:
+	# Capture via the main viewport. In headless GL mode the viewport
+	# texture may be non-readable; this is best-effort.
+	var vp := get_viewport()
+	var tex := vp.get_texture()
+	if tex == null:
+		push_error("capture: viewport texture is null for %s" % name)
+		return
+	var img: Image = tex.get_image()
+	if img == null:
+		push_error("capture: viewport texture image is null for %s" % name)
+		return
+	var path := "user://screenshots/%s.png" % name
 	var err := img.save_png(path)
 	if err == OK:
 		var size := img.get_size()
 		_saved.append("%s (%dx%d)" % [path, size.x, size.y])
-		print("  saved %s (%dx%d, waited %d frames)" % [path, size.x, size.y, waited])
+		print("  saved %s (%dx%d)" % [path, size.x, size.y])
 	else:
 		push_error("failed to save %s (err %d)" % [path, err])

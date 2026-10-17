@@ -32,7 +32,7 @@ jobs:
             curl unzip rsync tar ca-certificates libfontconfig1
 
       - name: Install Python dependencies
-        run: python -m pip install --upgrade pip pillow numpy
+        run: python -m pip install --upgrade pip pillow numpy DracoPy
 
       - name: Regenerate world data
         # Downloads real DEM + OSM data. Guarded so a transient upstream outage on a
@@ -42,6 +42,12 @@ jobs:
           python tools/build_world.py
           python tools/fetch_assets.py
           python tools/write_manifests.py
+
+      - name: Convert PLATEAU Kyoto 3D city models
+        if: always()
+        continue-on-error: true
+        run: |
+          python tools/fetch_plateau.py || echo 'PLATEAU conversion skipped (DracoPy issue or network)'
 
       - name: Build, validate, smoke test, export
         run: bash tools/build_release.sh

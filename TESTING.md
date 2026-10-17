@@ -47,8 +47,8 @@ Runs as a real scene, so autoloads exist and everything compiles for real. It:
 - asserts lantern objectives were placed and that `GameManager.objectives_total` matches;
 - steps physics twice and asserts the player did not fall through the terrain.
 
-Current result: **15/15 pass**, 97 terrain chunks, 97 city chunks, 61,368 buildings, 8,500 roads,
-8 lanterns.
+Current result: **20/20 pass**, 99 terrain chunks, 99 city chunks, 61,368 buildings, 8,500 roads,
+8 lanterns, 60 PLATEAU tiles, 2,053,158 PLATEAU triangles.
 
 ---
 
@@ -63,7 +63,7 @@ Boots the **exported** binary (not the editor), skips the menu, starts the world
 prints terrain/city/lantern/player counts and exits `0` on success, `1` on failure. This is the
 check that proves the shipped PCK contains the data and scripts.
 
-Current result: `terrain_chunks=97 city_chunks=97 lanterns=8 player=yes` → `RESULT: PASS`.
+Current result: `terrain_chunks=99 city_chunks=99 lanterns=8 player=yes` → `RESULT: PASS`.
 
 ---
 
@@ -76,6 +76,7 @@ Current result: `terrain_chunks=97 city_chunks=97 lanterns=8 player=yes` → `RE
 | Gamepad input | No device | Plug in a controller; axes are not bound yet (see feature matrix) |
 | Long-session streaming stability | Runtime budget | Walk the full 4 km region for ~10 minutes and watch the FPS/chunk counters |
 | Save/load round-trip | Not yet automated | Pause → Save Game → quit → Continue |
+| Screenshot capture | Headless GL cannot read back viewport textures | Run `tests/capture_screenshots.tscn` on a machine with a display (Xvfb or physical); see `BUILD.md` |
 
 These are reported as **unverified** rather than passing.
 
@@ -95,6 +96,9 @@ figures were measured on the build machine and are reproducible:
 | Terrain chunks resident at 1400 m view distance | **97** | smoke test |
 | City chunks resident | **97** | smoke test |
 | Building footprints parsed at startup | **61,368** | smoke test |
+| PLATEAU tiles streamed (Kyoto 5 wards) | **60** | smoke test |
+| PLATEAU decoded triangles | **2,053,158** | smoke test |
+| PLATEAU .pmesh files present | **193 tiles** | validate_project.gd |
 
 The design bounds work as follows:
 
