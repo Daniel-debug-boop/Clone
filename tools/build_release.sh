@@ -34,10 +34,12 @@ START_TIME=$(date +%s)
 
 SKIP_DOWNLOAD=0
 SKIP_TESTS=0
+SKIP_PLATEAU=0
 for arg in "$@"; do
   case "$arg" in
     --skip-download) SKIP_DOWNLOAD=1 ;;
     --skip-tests) SKIP_TESTS=1 ;;
+    --skip-plateau) SKIP_PLATEAU=1 ;;
   esac
 done
 
@@ -125,6 +127,32 @@ install_templates() {
 # ---------------------------------------------------------------------------
 # 2. Build steps
 # ---------------------------------------------------------------------------
+step_plateau() {
+  if [[ $SKIP_PLATEAU -eq 1 ]]; then
+    warn "PLATEAU conversion skipped by flag; OSM fallback buildings will be used"
+    return
+  fi
+  if ! python3 -c "import DracoPy" >/dev/null 2>&1; then
+    warn "DracoPy not installed; skipping PLATEAU conversion (pip install DracoPy)"
+    return
+  fi
+  if [[ -f "${PROJECT_ROOT}/assets/plateau/index.json" ]]; then
+    local tiles
+    tiles=$(find "${PROJECT_ROOT}/assets/plateau" -name '*.pmesh' 2>/dev/null | wc -l)
+    if [[ "$tiles" -gt 0 ]]; then
+      log "PLATEAU meshes already present (${tiles} tiles)"
+      return
+    fi
+  fi
+  log "Converting PLATEAU 3D city models"
+  ( cd "$PROJECT_ROOT" && python3 tools/fetch_plateau.py ) \
+    > "${LOG_DIR}/plateau_fetch.log" 2>&1 \
+    || die "PLATEAU conversion failed (see ${LOG_DIR}/plateau_fetch.log)"
+  grep -E "total:|vertical offset" "${LOG_DIR}/plateau_fetch.log" | tail -n 2 || true
+  log "PLATEAU conversion OK"
+}
+
+
 step_import() {
   log "Importing project resources (headless)"
   set +e
@@ -224,6 +252,28 @@ write_report() {
     "osm_source": "OpenStreetMap via Overpass (ODbL 1.0)",
     "materials_source": "Poly Haven (CC0 1.0)"
   },
+  "plateau": $(python3 - "${PROJECT_ROOT}" <<'PY'
+import json, os, sys, glob
+root = sys.argv[1]
+idx = os.path.join(root, "assets", "plateau", "index.json")
+if os.path.exists(idx):
+    try:
+        d = json.load(open(idx))
+        meshes = len(glob.glob(os.path.join(root, "assets", "plateau", "*", "*.pmesh")))
+        print(json.dumps({
+            "source": "PLATEAU (MLIT Japan)",
+            "indexed_tiles": d.get("tile_count"),
+            "present_meshes": meshes,
+            "triangles": d.get("triangles"),
+            "vertical_offset_m": d.get("vertical_offset_m"),
+            "licence": "CC BY 4.0",
+        }))
+    except Exception:
+        print("null")
+else:
+    print("null")
+PY
+),
   "checks": {
     "import": "pass",
     "validation": "pass",
@@ -252,6 +302,7 @@ log "Using Godot: $GODOT"
 "$GODOT" --headless --version 2>/dev/null | tail -n 1 || true
 
 install_templates
+step_plateau
 step_import
 if [[ $SKIP_TESTS -eq 0 ]]; then
   step_validate

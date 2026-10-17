@@ -19,6 +19,7 @@ const LANDMARKS: Array[Dictionary] = [
 
 var _terrain: TerrainStreamer
 var _city: OsmCity
+var _plateau: PlateauCity
 var _player: PlayerController
 var _hud: GameHUD
 var _lanterns: Array[LanternObjective] = []
@@ -43,9 +44,17 @@ func _ready() -> void:
 		push_error("MainWorld: terrain has no bounds; aborting")
 		return
 
+	# Real PLATEAU government 3D city models take priority for buildings.
+	_plateau = PlateauCity.new()
+	_plateau.name = "Plateau"
+	add_child(_plateau)
+	_plateau.setup(_terrain)
+
 	_city = OsmCity.new()
 	_city.name = "City"
 	add_child(_city)
+	if _plateau.available:
+		_city.set_coverage_check(_plateau.is_covered)
 	_city.setup(_terrain)
 
 	_spawn_player()
@@ -129,8 +138,12 @@ func _spawn_player() -> void:
 	if _player == null:
 		push_error("MainWorld: failed to instantiate player scene")
 		return
-	var spawn := _terrain.find_spawn_point(7) if _loaded == false else _terrain.find_spawn_point(7)
-	spawn.y = _terrain.get_height_at(spawn.x, spawn.z) + 1.2
+	# Prefer a point on an OSM road: road centrelines are free of building
+	# collision, so the player never starts inside a PLATEAU or OSM structure.
+	var spawn := _city.find_road_spawn() if _city else Vector3.ZERO
+	if spawn == Vector3.ZERO:
+		spawn = _terrain.find_spawn_point(7)
+		spawn.y = _terrain.get_height_at(spawn.x, spawn.z) + 1.6
 	_player.position = spawn
 	add_child(_player)
 	GameManager.spawn_position = spawn
@@ -142,6 +155,8 @@ func _spawn_player() -> void:
 		cam.fov = 72.0
 		cam.current = true
 	_terrain.set_player(_player)
+	if _plateau and _plateau.available:
+		_plateau.set_player(_player)
 
 
 func _project(lat: float, lon: float) -> Vector2:
@@ -265,9 +280,15 @@ func _run_packaged_smoke_check() -> void:
 	var chunks := _terrain.get_loaded_chunk_count() if _terrain else 0
 	var city_chunks := _city.get_loaded_chunk_count() if _city else 0
 	var lanterns := _lanterns.size()
-	var ok := chunks > 0 and city_chunks > 0 and lanterns > 0 and _player != null
-	print("[smoke] terrain_chunks=%d city_chunks=%d lanterns=%d player=%s" % [
-		chunks, city_chunks, lanterns, "yes" if _player != null else "no"])
+	var p_tiles := _plateau.get_loaded_tile_count() if _plateau else 0
+	var p_available := _plateau.available if _plateau else false
+	# Missing PLATEAU data degrades gracefully rather than hard-failing, but a
+	# build that ships the data must actually stream it.
+	var ok := chunks > 0 and city_chunks > 0 and lanterns > 0 and _player != null \
+		and (p_tiles > 0 or not p_available)
+	print("[smoke] terrain_chunks=%d city_chunks=%d plateau_available=%s plateau_tiles=%d lanterns=%d player=%s" % [
+		chunks, city_chunks, "yes" if p_available else "no", p_tiles, lanterns,
+		"yes" if _player != null else "no"])
 	print("[smoke] RESULT: %s" % ("PASS" if ok else "FAIL"))
 	get_tree().quit(0 if ok else 1)
 

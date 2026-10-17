@@ -26,6 +26,10 @@ func _fail(msg: String) -> void:
 	print("  FAIL  ", msg)
 
 
+func _warn(msg: String) -> void:
+	print("  WARN  ", msg)
+
+
 func _run() -> void:
 	print("=== Japan Open World smoke test ===")
 
@@ -58,8 +62,9 @@ func _run() -> void:
 		_fail("could not instantiate main world scene")
 		return
 	get_tree().root.add_child(world)
-	await get_tree().process_frame
-	await get_tree().process_frame
+	# PLATEAU streams a couple of tiles per frame, so give it a budget of frames.
+	for _i in range(30):
+		await get_tree().process_frame
 
 	# --- terrain -----------------------------------------------------------
 	var terrain = world.get_node_or_null("Terrain")
@@ -107,6 +112,44 @@ func _run() -> void:
 			_pass("city geometry streamed in %d chunks" % city_chunks)
 		else:
 			_fail("no city geometry streamed")
+
+	# --- PLATEAU 3D city models -------------------------------------------
+	var plateau = world.get_node_or_null("Plateau")
+	if plateau == null:
+		_fail("plateau node missing")
+	elif not plateau.available:
+		_warn("PLATEAU data not generated (run tools/fetch_plateau.py); OSM fallback active")
+	else:
+		var ptiles: int = plateau.get_loaded_tile_count()
+		if ptiles > 0:
+			_pass("PLATEAU streamed %d real building tiles" % ptiles)
+		else:
+			_fail("PLATEAU available but no tiles streamed")
+
+		var pstats: Dictionary = plateau.get_stats()
+		var pverts: int = int(pstats.get("vertices", 0))
+		var pfailed: int = int(pstats.get("failed", 0))
+		if pverts > 10000:
+			_pass("PLATEAU geometry decoded: %d vertices" % pverts)
+		else:
+			_fail("PLATEAU geometry too small: %d vertices" % pverts)
+		if pfailed == 0:
+			_pass("no PLATEAU tiles failed to load")
+		else:
+			_fail("%d PLATEAU tiles failed to load" % pfailed)
+
+		# Coverage must be usable for the OSM fallback decision.
+		if plateau.is_covered(0.0, 0.0) or plateau.is_covered(-300.0, -600.0):
+			_pass("PLATEAU coverage lookup works")
+		else:
+			_warn("coverage lookup returned false at sampled points")
+
+		if city != null:
+			var suppressed: int = int(city.get_stats().get("suppressed", 0))
+			if suppressed > 0:
+				_pass("OSM fallback boxes suppressed under PLATEAU coverage (%d)" % suppressed)
+			else:
+				_warn("no OSM buildings were suppressed by PLATEAU coverage")
 
 	# --- player ------------------------------------------------------------
 	var player = world.get_node_or_null("Player")
