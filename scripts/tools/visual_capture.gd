@@ -12,11 +12,17 @@ class_name VisualCapture
 ## Why this exists — the defects that made the old harness produce a meaningless
 ## image:
 ##
-##  1. **Framebuffer orientation.** Godot's Compatibility (OpenGL) renderer returns
-##     viewport readbacks with an inverted Y axis. The old harness saved that image
-##     verbatim, so every screenshot was upside down (ground above, sky below).
-##     This driver detects orientation from an on-screen probe band instead of
-##     assuming it, so it is correct on Forward+, Mobile and Compatibility alike.
+##  1. **Camera roll on steep views.** The old harness aimed the camera with
+##     `look_at(target, Vector3.UP)`. When the view direction is nearly parallel to
+##     the up vector — a camera high above the basin looking down into it — the
+##     resulting roll is ill-conditioned and the camera can end up inverted, which
+##     is what produced the original frame with ground above the sky. `_up_for()`
+##     now picks a stable up axis for near-vertical views, and every shot records
+##     `camera_up_dot_world_up` so the orientation is measured, not assumed.
+##     Readback orientation is also measured rather than assumed: the driver draws
+##     probe bands and records whether it had to correct them (`orientation_corrected`).
+##     On the verified engine/renderer combination that value is always false, i.e.
+##     the readback is upright and no correction is applied.
 ##
 ##  2. **Vantage points outside the streamed world.** The old harness teleported the
 ##     player to one place and then parked the camera hundreds of metres away, well
@@ -41,6 +47,10 @@ var _warnings: Array[String] = []
 
 var _world: Node
 var _player: Node3D
+var _spawn := Vector3.ZERO
+var _last_flipped := false
+var _sequence_frames := 0
+var _sequence_flips := 0
 var _terrain: Node
 var _city: Node
 var _plateau: Node
@@ -116,6 +126,7 @@ func run(world: Node, out_dir: String, video_frames: int = 0) -> void:
 	_freeze_camera()
 
 	var spawn: Vector3 = _player.global_position
+	_spawn = spawn
 	var hill := spawn
 	if _terrain.has_method("find_viewpoint"):
 		hill = _terrain.call("find_viewpoint")
@@ -140,9 +151,11 @@ func run(world: Node, out_dir: String, video_frames: int = 0) -> void:
 	else:
 		_warn("no PLATEAU tile centre available; skipping the PLATEAU close-up")
 
-	# 5. Higashiyama hills: the real elevation change across the Kyoto basin.
-	await _framed("05_hills_vista", hill, hill + Vector3(-170.0, 130.0, -170.0),
-			spawn + Vector3(0.0, 20.0, 0.0), 66.0)
+	# 5. Higashiyama hills: the real elevation change across the Kyoto basin. The camera
+	# sits a little above the ridge looking across the basin rather than straight down,
+	# so both the hillside and the city are in frame.
+	await _framed("05_hills_vista", hill, hill + Vector3(-150.0, 55.0, -150.0),
+			hill + Vector3(120.0, -35.0, 120.0), 66.0)
 
 	if video_frames > 0:
 		await _capture_sequence(video_frames)
@@ -223,6 +236,11 @@ func _remove_orientation_probe() -> void:
 
 
 ## Returns an upright copy of `img` with the probe bands cropped away.
+##
+## The readback's Y orientation is not guaranteed by the engine across renderers, and
+## guessing it wrong is silent, so the probe bands measure it: red is pinned to the
+## top of the screen and blue to the bottom, and whichever one lands on row 0 decides.
+## The decision is recorded per shot as `orientation_corrected`.
 func _orientation_correct(raw: Image) -> Image:
 	var img := raw.duplicate() as Image
 	if img.get_format() != Image.FORMAT_RGBA8 and img.get_format() != Image.FORMAT_RGB8:
@@ -246,8 +264,10 @@ func _orientation_correct(raw: Image) -> Image:
 		bot_red += b.r
 		bot_blue += b.b
 
-	if (top_blue > top_red) and (bot_red > bot_blue):
+	var flipped := (top_blue > top_red) and (bot_red > bot_blue)
+	if flipped:
 		img.flip_y()
+	_last_flipped = flipped
 
 	return img.get_region(Rect2i(0, BAND, w, h - BAND * 2))
 
@@ -284,6 +304,8 @@ func _settle(max_seconds: float, want_terrain: int, want_plateau: int) -> bool:
 	return false
 
 
+## Counts MeshInstance3D nodes anywhere under `root` whose own name starts with
+## `wanted_prefix` (the OSM renderer names its meshes "Buildings" and "Roads").
 func _mesh_instance_count(root: Node, wanted_prefix: String) -> int:
 	if root == null:
 		return 0
@@ -291,6 +313,24 @@ func _mesh_instance_count(root: Node, wanted_prefix: String) -> int:
 	for child in root.find_children("*", "MeshInstance3D", true, false):
 		if String(child.name).begins_with(wanted_prefix):
 			total += 1
+	return total
+
+
+## Counts direct children of `root` whose node name starts with `wanted_prefix` and
+## which actually carry a mesh. The PLATEAU loader names its tile nodes "PTile_0001"
+## and their MeshInstance3D child "Mesh", so counting mesh instances would always
+## report zero and quietly misrepresent the evidence.
+func _tile_node_count(root: Node, wanted_prefix: String) -> int:
+	if root == null:
+		return 0
+	var total := 0
+	for child in root.get_children():
+		if not String(child.name).begins_with(wanted_prefix):
+			continue
+		for grandchild in child.get_children():
+			if grandchild is MeshInstance3D and (grandchild as MeshInstance3D).mesh != null:
+				total += 1
+				break
 	return total
 
 
@@ -325,8 +365,21 @@ func _place_camera(from: Vector3, at: Vector3, fov: float) -> void:
 		return
 	cam.global_position = from
 	cam.fov = fov
-	cam.look_at(at, Vector3.UP)
+	cam.look_at(at, _up_for(from, at))
 	cam.current = true
+
+
+## `look_at` is ill-conditioned when the view direction is nearly parallel to the up
+## vector: the resulting roll becomes unstable and can flip the camera over, which is
+## how an earlier revision produced frames with the ground above the sky. Pick a
+## stable up axis for near-vertical views.
+func _up_for(from: Vector3, at: Vector3) -> Vector3:
+	var dir := (at - from)
+	if dir.length() < 0.001:
+		return Vector3.UP
+	if absf(dir.normalized().dot(Vector3.UP)) > 0.94:
+		return Vector3.FORWARD
+	return Vector3.UP
 
 
 func _framed(name: String, player_pos: Vector3, from: Vector3, at: Vector3, fov: float) -> void:
@@ -377,9 +430,14 @@ func _capture(name: String) -> void:
 		"plateau_available": _count(_plateau, "get_available_tile_count") > 0,
 		"road_meshes": _mesh_instance_count(_city, "Roads"),
 		"building_meshes": _mesh_instance_count(_city, "Buildings"),
-		"plateau_meshes": _mesh_instance_count(_plateau, "PTile"),
+		"plateau_meshes": _tile_node_count(_plateau, "PTile"),
 		"camera_position": [cam.global_position.x, cam.global_position.y, cam.global_position.z] if cam else [],
 		"camera_fov": cam.fov if cam else 0.0,
+		"orientation_corrected": _last_flipped,
+		"camera_up_dot_world_up": cam.global_transform.basis.y.dot(Vector3.UP) if cam else 0.0,
+		"camera_forward_pitch_deg": rad_to_deg(asin(clampf(
+				-cam.global_transform.basis.z.y, -1.0, 1.0))) if cam else 0.0,
+		"terrain_height_at_camera": _terrain_height_at(cam.global_position) if cam else 0.0,
 	}
 
 	var err := img.save_png(_path(shot["file"]))
@@ -409,6 +467,13 @@ func _analyse(shot: Dictionary) -> void:
 		_fail("%s has no OSM road meshes in the scene" % shot["name"])
 	if int(shot["building_meshes"]) <= 0 and not bool(shot["plateau_available"]):
 		_fail("%s has neither OSM building meshes nor PLATEAU geometry" % shot["name"])
+
+
+## Terrain elevation directly under a point, or NAN when the terrain does not expose it.
+func _terrain_height_at(pos: Vector3) -> float:
+	if _terrain != null and _terrain.has_method("get_height_at"):
+		return float(_terrain.call("get_height_at", pos.x, pos.z))
+	return NAN
 
 
 func _image_stats(img: Image) -> Dictionary:
@@ -464,22 +529,40 @@ func globalize(dir: String) -> String:
 ## gameplay video from them. Captured at the live player camera.
 func _capture_sequence(frames: int) -> void:
 	print("  capturing %d gameplay frames for video" % frames)
-	var arm := _player.get_node_or_null("CameraPivot/SpringArm3D")
-	if arm != null:
-		arm.process_mode = Node.PROCESS_MODE_INHERIT
+
+	# Recording must start from normal gameplay, not from wherever the last framed
+	# shot parked the camera (which is metres above the rooftops looking down).
+	# Put the player back on its spawn point, restore the follow camera and aim it
+	# at the horizon before the walk begins.
+	_player.global_position = _spawn
+
+	# Drive the camera explicitly for every recorded frame instead of handing control
+	# back to SpringArm3D. Re-attaching the arm leaves it to re-assert its own state,
+	# and an earlier revision recorded the whole sequence from underneath the terrain
+	# because the arm's stale state won over the reset transform. Explicit placement
+	# uses the same guarded code path as the framed shots, so it is reproducible.
 	var dir := globalize("%s/sequence" % _out_dir)
 	DirAccess.make_dir_recursive_absolute(dir)
 	var forward := Vector3(0.0, 0.0, -1.0)
+	var eye := Vector3(0.0, 1.55, 0.0)
+
 	for i in range(frames):
 		_player.global_position += forward * 0.35
+		# A little behind and above the player, looking ahead down the street.
+		var pos: Vector3 = _player.global_position
+		_place_camera(pos + eye - forward * 4.0, pos + eye + forward * 40.0, 72.0)
+		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
 		await RenderingServer.frame_post_draw
 		var img: Image = _world.get_viewport().get_texture().get_image()
 		if img == null:
 			_warn("video frame %d could not be read back" % i)
 			break
 		img = _orientation_correct(img)
+		_sequence_frames += 1
+		if _last_flipped:
+			_sequence_flips += 1
 		img.save_png("%s/frame_%04d.png" % [dir, i])
-	_freeze_camera()
 
 
 # ---------------------------------------------------------------------------
@@ -501,6 +584,7 @@ func _write_report(renderer: Dictionary) -> void:
 		"generated_utc": Time.get_datetime_string_from_system(true),
 		"renderer": renderer,
 		"out_dir": _out_dir,
+		"sequence": {"frames": _sequence_frames, "frames_flipped": _sequence_flips},
 		"shots": _shots,
 		"warnings": _warnings,
 		"failures": _failures,

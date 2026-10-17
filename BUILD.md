@@ -205,7 +205,9 @@ What that run has to survive, and why each check exists:
 
 | Check | Failure it catches |
 |---|---|
-| Framebuffer orientation probe | The Compatibility/OpenGL renderer returns viewport readbacks with an inverted Y axis; the old harness saved them upside down |
+| Framebuffer orientation probe | Readback Y orientation is measured with red/blue probe bands instead of assumed, and recorded per shot (`orientation_corrected`) |
+| Stable camera up axis | `look_at(at, Vector3.UP)` is ill-conditioned for near-vertical views and can roll the camera over — the original inverted frame |
+| Recorded camera geometry | `camera_up_dot_world_up`, pitch and camera-vs-terrain height are written per shot so orientation is measured, not eyeballed |
 | Streaming-aware settle per shot | Shots taken before terrain/city/PLATEAU chunks were resident, which photographed an empty plain |
 | Camera anchored to the player | Vantage points parked hundreds of metres outside the stream radius |
 | Non-blank, non-duplicate pixel analysis | Flat, black or repeated frames passing as evidence |
@@ -248,5 +250,5 @@ godot --path . --rendering-driver opengl3 \
 | PLATEAU tiles not showing | Run `python3 tools/fetch_plateau.py` (requires DracoPy); check `build_output/logs/plateau_fetch.log`. |
 | Screenshots save to `null` / capture produces 0 PNGs | Headless mode cannot read back viewport textures. Run with a real display (Xvfb or physical monitor) via `tools/visual_acceptance.sh`. |
 | `libfontconfig.so.1` / `libfreetype.so.6` / `libXcursor.so.1: cannot open shared object file`, then `Unable to create DisplayServer` | The software-display bootstrap is incomplete. `tools/setup_software_display.sh` installs the full transitive library set, provides `xkbcomp` where Xvfb looks for it, and *verifies* the display came up before returning success. |
-| Screenshots are upside down (ground above, sky below) | The Compatibility/OpenGL renderer's viewport readback is Y-inverted. The capture driver detects this from an on-screen probe band and corrects it; if you replaced the driver, you lost that correction. |
+| Screenshots have ground above and sky below | Not a readback flip: the camera is rolled over, which `look_at` does when the view direction is nearly parallel to the up vector. Check `camera_up_dot_world_up` in `capture_report.json`; `_up_for()` in the driver picks a stable up axis. |
 | Packaged game has no PLATEAU buildings but the editor does | `export_presets.cfg` must include `*.pmesh` in `include_filter`; without it the PCK ships the index but none of the geometry and the loader falls back to OSM boxes. |

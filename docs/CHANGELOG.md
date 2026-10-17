@@ -8,10 +8,14 @@ The build and every headless test passed while the game rendered an unusable ima
 band with green blocks. Root causes, each fixed and verified by rendering the packaged build
 under Xvfb + Mesa and inspecting the pixels:
 
-- **Framebuffer was vertically flipped.** Godot's Compatibility (OpenGL) renderer returns
-  viewport readbacks with an inverted Y axis, and the harness saved that verbatim. Now
-  `scripts/tools/visual_capture.gd` measures orientation from red/blue probe bands pinned to
-  the top and bottom of the screen and corrects it, so it is right on any renderer.
+- **Camera roll on steep views.** The harness aimed with `look_at(at, Vector3.UP)`, which is
+  ill-conditioned when the view direction is nearly parallel to the up vector — a camera high
+  above the basin looking down into it — and the camera came out inverted, producing the
+  original frame with ground above the sky. `_up_for()` now selects a stable up axis for
+  near-vertical views. Correction for the record: an earlier revision of this entry blamed a
+  Y-inverted viewport readback under the Compatibility renderer. Measurement disproved that —
+  `camera_up_dot_world_up` is 0.94-1.00 and `orientation_corrected` is false on every shot,
+  i.e. the readback is upright. The probe bands remain as a measurement, not a workaround.
 - **PLATEAU geometry was missing from the packaged build.** `export_presets.cfg` had
   `include_filter="*.json, *.f32, *.dat"`, so the PCK shipped `index.json` but none of the 193
   `.pmesh` payloads and the loader fell back to OSM boxes. The packaged smoke test said
