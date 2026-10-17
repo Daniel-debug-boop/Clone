@@ -1,0 +1,20 @@
+{
+  "roads": {
+    "file": "roads.json",
+    "count": 8500
+  },
+  "buildings": {
+    "file": "buildings.json",
+    "count": 61368
+  },
+  "source": "OpenStreetMap (Overpass API)",
+  "license": "ODbL 1.0 - \u00a9 OpenStreetMap contributors",
+  "attribution": "https://www.openstreetmap.org/copyright",
+  "bbox": {
+    "west": 135.7470703125,
+    "south": 34.99400375757576,
+    "east": 135.791015625,
+    "north": 35.02999636902566
+  },
+  "generated_utc": "2026-10-17T10:44:59Z"
+}

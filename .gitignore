@@ -1,0 +1,44 @@
+# Godot import cache and generated metadata
+.godot/
+*.translation
+*.remap
+
+# Build outputs
+build_output/
+builds/
+*.tar.gz
+*.pck
+*.x86_64
+SHA256SUMS.txt
+
+# Downloaded toolchain and cached archives
+.cache/
+tools/bin/
+Godot_v*.zip
+Godot_v*.tpz
+Godot_v*_linux.*
+templates/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+secrets/
+*.token
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Temporary / partial downloads
+*.part
+*.tmp

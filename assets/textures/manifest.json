@@ -1,0 +1,134 @@
+{
+  "aerial_grass_rock": {
+    "purpose": "terrain ground (grass / exposed rock)",
+    "source": "https://polyhaven.com/a/aerial_grass_rock",
+    "license": "CC0 1.0",
+    "license_url": "https://polyhaven.com/license",
+    "resolution": "2k",
+    "format": "jpg",
+    "files": {
+      "albedo": {
+        "file": "aerial_grass_rock_albedo.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_diff_2k.jpg",
+        "bytes": 2624635,
+        "sha256": "1a2ddfa4652adbe00447b940c40019d46f4b88245bc1b341cdf622c2110b7bc5"
+      },
+      "normal": {
+        "file": "aerial_grass_rock_normal.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_nor_gl_2k.jpg",
+        "bytes": 3799025,
+        "sha256": "c6aa14b042ce243f93a6ca807f46a085711c23ad316b104578e92df7770ee285"
+      },
+      "roughness": {
+        "file": "aerial_grass_rock_roughness.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_grass_rock/aerial_grass_rock_rough_2k.jpg",
+        "bytes": 1495844,
+        "sha256": "fc0fff40e3378f2f54d225db6e3e566a8563bb2c143eef0f09b543c9d4698776"
+      }
+    }
+  },
+  "aerial_asphalt_01": {
+    "purpose": "road surface",
+    "source": "https://polyhaven.com/a/aerial_asphalt_01",
+    "license": "CC0 1.0",
+    "license_url": "https://polyhaven.com/license",
+    "resolution": "2k",
+    "format": "jpg",
+    "files": {
+      "albedo": {
+        "file": "aerial_asphalt_01_albedo.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_asphalt_01/aerial_asphalt_01_diff_2k.jpg",
+        "bytes": 2802005,
+        "sha256": "a85ce28b8e6ed90acb0234832969b27f5b73fe055a0d5b94f34fc2943d319fb5"
+      },
+      "normal": {
+        "file": "aerial_asphalt_01_normal.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_asphalt_01/aerial_asphalt_01_nor_gl_2k.jpg",
+        "bytes": 2751902,
+        "sha256": "cb7e5b75ff47ad672ab820f71b77566419b612e52e7791c5ed90a7fa27b71807"
+      },
+      "roughness": {
+        "file": "aerial_asphalt_01_roughness.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/aerial_asphalt_01/aerial_asphalt_01_rough_2k.jpg",
+        "bytes": 1392536,
+        "sha256": "20fdcdc9fc2a3efef83fd8a3453d2bc0a8543ee3ebb2badf148e4c142704eeff"
+      }
+    }
+  },
+  "rocky_terrain_02": {
+    "purpose": "hillside / cliff detail",
+    "source": "https://polyhaven.com/a/rocky_terrain_02",
+    "license": "CC0 1.0",
+    "license_url": "https://polyhaven.com/license",
+    "resolution": "2k",
+    "format": "jpg",
+    "files": {
+      "albedo": {
+        "file": "rocky_terrain_02_albedo.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rocky_terrain_02/rocky_terrain_02_diff_2k.jpg",
+        "bytes": 3232826,
+        "sha256": "9b042fe0618ffbc3650592456d7d8d265ba9a1cb5ce802f5f1d86b7ee79508a1"
+      },
+      "normal": {
+        "file": "rocky_terrain_02_normal.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rocky_terrain_02/rocky_terrain_02_nor_gl_2k.jpg",
+        "bytes": 4149208,
+        "sha256": "556ed903180a9431b253fc1c334c769dc4615c5c0f4ef1cedf20533ae8409ce8"
+      },
+      "roughness": {
+        "file": "rocky_terrain_02_roughness.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/rocky_terrain_02/rocky_terrain_02_rough_2k.jpg",
+        "bytes": 1589303,
+        "sha256": "89f3c7b9e467160a821cbac32a1fdfd75f13cb87c9deeb22099d16677a711126"
+      }
+    }
+  },
+  "painted_concrete": {
+    "purpose": "building facades and retaining walls",
+    "source": "https://polyhaven.com/a/painted_concrete",
+    "license": "CC0 1.0",
+    "license_url": "https://polyhaven.com/license",
+    "resolution": "2k",
+    "format": "jpg",
+    "files": {
+      "albedo": {
+        "file": "painted_concrete_albedo.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_concrete/painted_concrete_diff_2k.jpg",
+        "bytes": 4055196,
+        "sha256": "558ae59b4b9d159f24686e4ee0a768ea89cbc02f08ede82b91445d57850748b8"
+      },
+      "normal": {
+        "file": "painted_concrete_normal.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_concrete/painted_concrete_nor_gl_2k.jpg",
+        "bytes": 2786551,
+        "sha256": "8da7fbbb29311fc53b052167c9fcfa73027c0a06808120a200295d866587a813"
+      },
+      "roughness": {
+        "file": "painted_concrete_roughness.jpg",
+        "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_concrete/painted_concrete_rough_2k.jpg",
+        "bytes": 1926276,
+        "sha256": "136ef5e95e17a8103a2bf311c5f55008a1ca56e57bf5904160491f0a7cde0b65"
+      }
+    }
+  },
+  "_meta": {
+    "source": "Poly Haven",
+    "license": "CC0 1.0 Universal",
+    "attribution": "Assets courtesy of Poly Haven (polyhaven.com). CC0 - attribution appreciated, not required.",
+    "generated_utc": "2026-10-17T10:43:14Z"
+  },
+  "kloofendal_48d_partly_cloudy_puresky": {
+    "purpose": "daylight sky / IBL for the open world",
+    "source": "https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky",
+    "license": "CC0 1.0",
+    "license_url": "https://polyhaven.com/license",
+    "files": {
+      "hdri": {
+        "file": "kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+        "url": "https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/kloofendal_48d_partly_cloudy_puresky_2k.hdr",
+        "bytes": 5451493,
+        "sha256": "5244534e9cf5b606f2ff513aa00ddb161b0a4826ffd88a0d3bd03ac29247d198"
+      }
+    }
+  }
+}

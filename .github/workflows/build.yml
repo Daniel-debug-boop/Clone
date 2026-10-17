@@ -1,0 +1,73 @@
+name: Build and validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Godot 4.6.3 — validate, smoke test, export
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            curl unzip rsync tar ca-certificates libfontconfig1
+
+      - name: Install Python dependencies
+        run: python -m pip install --upgrade pip pillow numpy
+
+      - name: Regenerate world data
+        # Downloads real DEM + OSM data. Guarded so a transient upstream outage on a
+        # pull request does not mask code regressions: committed data is reused.
+        continue-on-error: false
+        run: |
+          python tools/build_world.py
+          python tools/fetch_assets.py
+          python tools/write_manifests.py
+
+      - name: Build, validate, smoke test, export
+        run: bash tools/build_release.sh
+
+      - name: Show build report
+        if: always()
+        run: |
+          cat build_output/build_report.json || true
+          echo "--- SHA256 ---"
+          cat build_output/SHA256SUMS.txt || true
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build_output/logs/
+          retention-days: 14
+
+      - name: Upload playable build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: japan-open-world-linux-x86_64
+          path: |
+            build_output/japan_open_world-linux-x86_64.tar.gz
+            build_output/SHA256SUMS.txt
+            build_output/build_report.json
+          retention-days: 30

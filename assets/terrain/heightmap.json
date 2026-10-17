@@ -1,0 +1,42 @@
+{
+  "region": {
+    "name": "Kyoto Central",
+    "name_ja": "\u4eac\u90fd\u5e02\u4e2d\u5fc3\u90e8",
+    "south": 34.998,
+    "north": 35.0215,
+    "west": 135.752,
+    "east": 135.785,
+    "heightmap_size": 512
+  },
+  "zoom": 14,
+  "tiles": {
+    "x0": 14370,
+    "y0": 6488,
+    "x1": 14371,
+    "y1": 6489
+  },
+  "mosaic_px": [
+    512,
+    512
+  ],
+  "heightmap_px": [
+    512,
+    512
+  ],
+  "bbox": {
+    "west": 135.7470703125,
+    "south": 34.99400375757576,
+    "east": 135.791015625,
+    "north": 35.02999636902566
+  },
+  "elevation_min_m": 29.0,
+  "elevation_max_m": 244.79,
+  "world_size_m": {
+    "x": 4006.7,
+    "z": 3979.8
+  },
+  "source": "AWS Open Data terrain-tiles (Terrarium)",
+  "license": "Terrain Tiles: free/open (SRTM, ETOPO, NED derived)",
+  "heightmap_sha256": "37a309753dbae046f7e3f8534e004eb2edbe477b123eed515a3cfec33b87ca75",
+  "generated_utc": "2026-10-17T10:39:23Z"
+}
