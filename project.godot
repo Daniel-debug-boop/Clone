@@ -1,0 +1,40 @@
+
+; Japan Open World — Godot 4.6.3
+; Desktop baseline: Forward+ renderer, Vulkan.
+; External addons and assets must be installed separately.
+
+config_version=5
+
+[application]
+
+config/name="Japan Open World"
+run/main_scene="res://scenes/main_world.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+
+[debug]
+
+settings/stdout/print_fps=false
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/ stretch/mode="canvas_items"
+
+[physics]
+
+3d/default_gravity=9.8
+3d/default_gravity_vector=Vector3(0, -1, 0)
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="mobile"
+rendering_device/driver="vulkan"
+textures/default_filters/use_nearest_mipmap_filter=false
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=2
+environment/defaults/default_clear_color=Color(0.05, 0.07, 0.1, 1)
