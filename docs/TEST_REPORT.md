@@ -1,8 +1,9 @@
 # Test report
 
-Generated: 2026-10-17T10:58:06Z
+Generated: 2026-10-17T11:01:43Z
 
-Godot: 4.6.3.stable.official.7d41c59c4
+- Godot: `4.6.3.stable.official.7d41c59c4`
+- Commit: `fa1d02cbbfb0507c98a292d90033c0f487a644c0`
 
 ## Build report
 ```json
@@ -12,7 +13,7 @@ Godot: 4.6.3.stable.official.7d41c59c4
   "godot_binary": "/tmp/godot/Godot_v4.6.3-stable_linux.x86_64",
   "platform": "Linux/X11 x86_64",
   "export_preset": "Linux/X11",
-  "duration_seconds": 25,
+  "duration_seconds": 26,
   "artifacts": {
     "executable": "japan_open_world.x86_64",
     "pck": "japan_open_world.pck",
@@ -32,11 +33,11 @@ Godot: 4.6.3.stable.official.7d41c59c4
     "export": "pass",
     "packaged_smoke": "pass"
   },
-  "generated_utc": "2026-10-17T10:57:58Z"
+  "generated_utc": "2026-10-17T11:00:05Z"
 }
 ```
 
-## Validation (static + data)
+## Static + data validation (55 assertions)
 ```
   PASS  autoload SettingsManager -> res://scripts/autoload/settings_manager.gd
 
@@ -46,7 +47,7 @@ passed: 55   warnings: 0   failures: 0
 RESULT: PASS
 ```
 
-## Runtime smoke test
+## Runtime smoke test (15 assertions)
 ```
   PASS  GameManager autoload present
   PASS  SettingsManager autoload present
@@ -75,9 +76,25 @@ Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
 [smoke] RESULT: PASS
 ```
 
-## Artifacts
+## Measured runtime metrics
+
+| Metric | Value |
+|---|---|
+| Packaged game to world-ready (headless) | 4.13 s |
+| Packaged game peak RSS | 397.5 MB |
+| Headless asset import | 4.49 s / 625.6 MB peak |
+| Terrain + city chunks resident | 97 + 97 |
+
+## Artifact checksums
 ```
-5c886c61647b7a08a786653ded9792b30af4d071d855803d1c2da56991c1ec7b  japan_open_world-linux-x86_64.tar.gz
+0880cc6cf2dc53600e485187254c98e16a2720698f983544ad0a59faa1d584da  japan_open_world-linux-x86_64.tar.gz
 2c78919325d7f29fa7607287c7c1eeac367ea4c94e7b8b6f5f4c6b20492f73d0  japan_open_world.x86_64
-8c4e4060cf2427bb6735367ac68e9aff9418403603fcd4ff0b7306d8a8cf0f78  japan_open_world.pck
+43a199903527e0d225d21aa59a4d4e816f6f6fff33fe0732cfd7912743360b2c  japan_open_world.pck
 ```
+
+## Notes
+
+- Logs contain only `Unable to load fontconfig` on this minimal container; Godot's bundled
+  default font still renders UI text. Install `libfontconfig1` to silence it.
+- Frame rate, GPU frame time and visual quality are **not** measured here because the build
+  environment is headless. Validate on real hardware using `TESTING.md`.

@@ -83,8 +83,20 @@ These are reported as **unverified** rather than passing.
 
 ## Performance baseline
 
-The renderer is headless during automated tests, so no FPS number is claimed. The design bounds
-work as follows:
+The renderer is headless during automated tests, so **no FPS number is claimed**. The following
+figures were measured on the build machine and are reproducible:
+
+| Metric | Value | How measured |
+|---|---|---|
+| Packaged game → world ready (headless) | **4.13 s** | `./japan_open_world.x86_64 --headless -- --smoke-test`, wall clock |
+| Packaged game peak RSS | **397.5 MB** | `getrusage(RUSAGE_CHILDREN).ru_maxrss` |
+| Headless asset import | **4.49 s**, 625.6 MB peak | editor `--import` |
+| Full build (cached engine, all tests, export) | **~26 s** | `tools/build_release.sh` |
+| Terrain chunks resident at 1400 m view distance | **97** | smoke test |
+| City chunks resident | **97** | smoke test |
+| Building footprints parsed at startup | **61,368** | smoke test |
+
+The design bounds work as follows:
 
 - 250 m chunks; 33×33 vertices each (1,089 verts, 2,048 tris);
 - at the default 1400 m view distance, ~97 terrain chunks are resident (~199k tris) plus ~97
