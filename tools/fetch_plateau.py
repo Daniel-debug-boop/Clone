@@ -19,7 +19,8 @@ Why this shape of pipeline (measured, not assumed):
 Data source : PLATEAU (Project PLATEAU, MLIT Japan) - https://www.mlit.go.jp/plateau/
 Catalog API : https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets
 Tiles       : assets.cms.plateau.reearth.io
-Licence     : PLATEAU open data, CC BY 4.0 (see THIRD_PARTY_NOTICES.md)
+Licence     : MLIT Public Data License 1.0 (PDL 1.0, 公共データ利用規約 第1.0版);
+            MLIT states this is compatible with CC BY 4.0 (see THIRD_PARTY_NOTICES.md)
 
 Outputs
   assets/plateau/<ward>/tile_XXXX.pmesh   engine-ready mesh chunks
@@ -526,7 +527,8 @@ def main() -> int:
         "source": "PLATEAU (Project PLATEAU, MLIT Japan)",
         "portal": "https://www.mlit.go.jp/plateau/",
         "catalog_api": CATALOG_URL,
-        "licence": "CC BY 4.0 (PLATEAU open data)",
+        "licence": "Public Data License 1.0 (PDL 1.0, 公共データ利用規約 第1.0版) - MLIT terms of use for Project PLATEAU; MLIT states this is compatible with CC BY 4.0",
+        "licence_cc_by_compatible": True,
         "attribution": "3D city model data: Project PLATEAU, Ministry of Land, Infrastructure, Transport and Tourism (Japan)",
         "cartography_approval": "PLATEAU data is published for open use; see the portal for the current terms.",
         "wards": dataset_reports,

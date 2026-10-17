@@ -101,14 +101,41 @@ func _load_index() -> bool:
 
 ## Mark 100 m cells covered by PLATEAU so OSM box buildings can be suppressed
 ## only where real geometry exists (partial coverage must still fall back).
+## Build coverage only from wards whose mesh files are actually present on disk.
+## The index lists every tile the pipeline *intended* to write, but an individual
+## .pmesh can be missing (partial run, deleted, etc.). If we suppress OSM buildings
+## from the whole index we get holes where fallback buildings should appear.
 func _build_coverage() -> void:
+	# Group tiles by ward so we can test whether a ward's files exist.
+	var by_ward: Dictionary = {}
 	for t: Dictionary in _tiles:
-		var b: Array = t.get("bounds", [])
-		if b.size() < 6:
+		var rel: String = String(t.get("file", ""))
+		if rel.is_empty():
 			continue
-		for cx in range(int(floor(float(b[0]) / 100.0)), int(floor(float(b[3]) / 100.0)) + 1):
-			for cz in range(int(floor(float(b[2]) / 100.0)), int(floor(float(b[5]) / 100.0)) + 1):
-				_coverage[Vector2i(cx, cz)] = true
+		var slash: int = rel.find("/")
+		var ward: String = rel.substr(0, slash) if slash >= 0 else rel
+		var list: Array = by_ward.get(ward, [])
+		list.append(t)
+		by_ward[ward] = list
+
+	for ward: String in by_ward.keys():
+		# A ward is "present" when at least one of its tiles exists on disk.
+		var tiles: Array = by_ward[ward]
+		var any_present := false
+		for t: Dictionary in tiles:
+			var rel: String = String(t.get("file", ""))
+			if FileAccess.file_exists("res://assets/plateau/" + rel):
+				any_present = true
+				break
+		if not any_present:
+			continue
+		for t: Dictionary in tiles:
+			var b: Array = t.get("bounds", [])
+			if b.size() < 6:
+				continue
+			for cx in range(int(floor(float(b[0]) / 100.0)), int(floor(float(b[3]) / 100.0)) + 1):
+				for cz in range(int(floor(float(b[2]) / 100.0)), int(floor(float(b[5]) / 100.0)) + 1):
+					_coverage[Vector2i(cx, cz)] = true
 
 
 func is_covered(x: float, z: float) -> bool:
