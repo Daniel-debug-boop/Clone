@@ -1,0 +1,60 @@
+
+[gd_scene format=3]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.15, 0.28, 0.45, 1)
+sky_horizon_color = Color(0.65, 0.72, 0.8, 1)
+ground_bottom_color = Color(0.1, 0.1, 0.12, 1)
+ground_horizon_color = Color(0.65, 0.72, 0.8, 1)
+energy_multiplier = 1.0
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="WorldEnvironment"]
+background_mode = 2
+sky = SubResource("Sky")
+tonemap_mode = 3
+tonemap_exposure = 1.0
+ssao_enabled = true
+ssao_radius = 2.0
+ssao_intensity = 1.0
+glow_enabled = true
+glow_levels/1 = 0.8
+glow_levels/2 = 0.5
+glow_blend_mode = 1
+volumetric_fog_enabled = false
+sdfgi_enabled = false
+
+[sub_resource type="BoxShape3D" id="GroundCollision"]
+size = Vector3(500, 1, 500)
+
+[sub_resource type="BoxMesh" id="GroundMesh"]
+size = Vector3(500, 1, 500)
+
+[node name="MainWorld" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("WorldEnvironment")
+
+[node name="SunLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-45, -30, 0)
+light_color = Color(1, 0.95, 0.88, 1)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="TemporaryGround" type="StaticBody3D" parent="."]
+position = Vector3(0, -0.5, 0)
+
+[node name="GroundMesh" type="MeshInstance3D" parent="TemporaryGround"]
+mesh = SubResource("GroundMesh")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="TemporaryGround"]
+shape = SubResource("GroundCollision")
+
+[node name="PlayerCamera" type="Camera3D" parent="."]
+position = Vector3(0, 3, 8)
+rotation_degrees = Vector3(-15, 0, 0)
+current = true
+near = 0.05
+far = 2000.0
