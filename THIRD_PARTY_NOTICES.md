@@ -106,12 +106,55 @@ Exact file names and SHA-256 values are recorded in `ASSET_MANIFEST.md` and
 
 ---
 
+## 6. PLATEAU 3D city models (Project PLATEAU, MLIT)
+
+- **Used for:** the real building geometry streamed as `assets/plateau/**/*.pmesh`.
+- **Project:** "Project PLATEAU", the Ministry of Land, Infrastructure, Transport and Tourism
+  (国土交通省, MLIT) 3D city-model initiative — https://www.mlit.go.jp/plateau/
+- **Dataset used:** Kyoto City 3D Tiles (LOD2, noTexture variant), published through the
+  PLATEAU View asset CDN (`assets.cms.plateau.reearth.io`). Five Kyoto wards inside the
+  playable region: kamigyo-ku (上京区), sakyo-ku (左京区), nakagyo-ku (中京区),
+  higashiyama-ku (東山区), shimogyo-ku (下京区) — 193 tiles, 1,946,208 triangles.
+- **Discovery API:** https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets
+- **Licence:** **Public Data License 1.0 (公共データ利用規約 第1.0版)**, the MLIT terms of use.
+  MLIT states this rule is compatible with **CC BY 4.0** and permits use under CC BY, ODC BY
+  or ODbL. Source: https://www.mlit.go.jp/plateau/site-policy/ ("3. コンテンツの利用").
+- **Copyright:** 国土交通省 (MLIT), except that for 3D city models published via the
+  "G空間情報センター" open-data channel copyright belongs to each local municipality.
+
+**Required attribution (per MLIT's stated examples):**
+
+```
+出典：国土交通省 PLATEAUウェブサイト（https://www.mlit.go.jp/plateau/）
+```
+
+MLIT additionally requires that when content is edited or modified, the modification is
+stated, and that modified material is never presented as if MLIT produced it. Our pipeline
+Decodes the Draco-compressed b3dm payloads, re-projects them into the game's local frame and
+drops texture and material data, so the required "modified" form is used:
+
+```
+「国土地理院／国土交通省 実在空間3D都市モデル」を加工して作成
+（出典：国土交通省 PLATEAUウェブサイト https://www.mlit.go.jp/plateau/）
+```
+
+The exact per-tile upstream URL of every converted tile is recorded in
+`assets/plateau/index.json` under `tiles[].source`, so provenance is auditable tile by tile.
+
+**Note on coverage:** PLATEAU LOD2 buildings carry no interior geometry and the
+`no_texture` variant carries no facade textures. Interior spaces, street furniture, vehicles
+and vegetation therefore do **not** come from PLATEAU; see `ASSET_MANIFEST.md` for the
+licensed fallbacks actually used, and `docs/FEATURE_MATRIX.md` for what remains unimplemented.
+
+---
+
 ## Attribution in the shipped game
 
-The pause menu footer displays:
+The HUD footer displays:
 
 > Terrain: Mapzen/AWS Terrain Tiles (SRTM, USGS). Map data © OpenStreetMap contributors (ODbL).
+> 3D buildings: 国土交通省 PLATEAU, 「実在空間3D都市モデル」を加工して作成.
 > Materials: Poly Haven (CC0). Engine: Godot (MIT).
 
-This satisfies the "reasonable to the medium" requirement of both the OSM and terrain-tile
-attribution policies for a bundled desktop build.
+This satisfies the "reasonable to the medium" requirement of the OSM, terrain-tile and
+PLATEAU (PDL 1.0 / CC BY-compatible) attribution policies for a bundled desktop build.

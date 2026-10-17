@@ -33,7 +33,14 @@ var _loaded: Dictionary = {}   # Vector2i -> Node3D
 var _road_material: StandardMaterial3D
 var _building_material: StandardMaterial3D
 var _road_mesh_cache: Dictionary = {}
-var _stats := {"buildings": 0, "roads": 0, "chunks": 0}
+var _stats := {"buildings": 0, "roads": 0, "chunks": 0, "suppressed": 0}
+## Optional predicate (x, z) -> bool. When it returns true the area already has
+## real PLATEAU geometry, so extruding a fallback OSM box there would double up.
+var _coverage_check: Callable = Callable()
+
+
+func set_coverage_check(cb: Callable) -> void:
+	_coverage_check = cb
 
 
 func setup(terrain: TerrainStreamer) -> void:
@@ -244,6 +251,12 @@ func _build_buildings_mesh(indices: Array) -> Dictionary:
 		cx /= pts.size()
 		cz /= pts.size()
 
+		# Prefer real PLATEAU geometry where it exists; OSM boxes are the
+		# fallback for areas PLATEAU does not cover.
+		if _coverage_check.is_valid() and bool(_coverage_check.call(cx, cz)):
+			_stats["suppressed"] = int(_stats["suppressed"]) + 1
+			continue
+
 		var base := INF
 		for p in pts:
 			base = minf(base, _terrain.get_height_at(p.x, p.y))
@@ -397,6 +410,34 @@ func _build_roads_mesh(indices: Array) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return mesh
+
+
+## Pick a spawn point on a walkable OSM way near the region centre. Buildings
+## (PLATEAU or OSM fallback) do not occupy road centrelines, so this guarantees
+## the player does not start inside collision geometry.
+func find_road_spawn(prefer_codes: Array = [8, 7, 10, 5, 9]) -> Vector3:
+	var best := Vector3.ZERO
+	var best_dist := INF
+	var found := false
+	for pass_code: int in prefer_codes:
+		for r in _roads:
+			if int(r["code"]) != pass_code:
+				continue
+			var pts: PackedVector2Array = r["points"]
+			if pts.size() < 2:
+				continue
+			var p: Vector2 = pts[pts.size() / 2]
+			var d := p.length()
+			if d < best_dist:
+				best_dist = d
+				best = Vector3(p.x, 0.0, p.y)
+				found = true
+		if found:
+			break
+	if not found:
+		return Vector3.ZERO
+	best.y = _terrain.get_height_at(best.x, best.z) + 1.6
+	return best
 
 
 func get_stats() -> Dictionary:

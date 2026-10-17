@@ -17,6 +17,7 @@ func _init() -> void:
 	_check_scene_files()
 	_check_script_files()
 	_check_data_files()
+	_check_plateau()
 	_check_assets()
 	_check_autoloads()
 	_report()
@@ -182,6 +183,75 @@ func _check_data_files() -> void:
 			_pass("buildings.dat magic valid (%d footprints)" % b.decode_u32(4))
 		else:
 			_fail("buildings.dat magic invalid")
+
+
+func _check_plateau() -> void:
+	print("\n[PLATEAU 3D city models]")
+	var index_path := "res://assets/plateau/index.json"
+	var manifest_path := "res://assets/plateau/manifest.json"
+
+	if not FileAccess.file_exists(index_path):
+		_warn("PLATEAU index missing (run tools/fetch_plateau.py); OSM fallback will be used")
+		return
+
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(index_path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		_fail("plateau/index.json is not valid JSON")
+		return
+	var idx: Dictionary = parsed
+	var tiles: Array = idx.get("tiles", [])
+	if tiles.is_empty():
+		_fail("plateau/index.json has no tiles")
+		return
+	_pass("PLATEAU index lists %d tiles" % tiles.size())
+
+	var offset := float(idx.get("vertical_offset_m", 0.0))
+	if absf(offset) < 200.0:
+		_pass("PLATEAU vertical offset is plausible (%.2f m)" % offset)
+	else:
+		_fail("PLATEAU vertical offset looks wrong (%.2f m)" % offset)
+
+	if FileAccess.file_exists(manifest_path):
+		var m: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
+		if typeof(m) == TYPE_DICTIONARY:
+			var src := String((m as Dictionary).get("source", ""))
+			if src.contains("PLATEAU"):
+				_pass("PLATEAU manifest records the official source")
+			else:
+				_fail("PLATEAU manifest does not name the source")
+		else:
+			_fail("plateau/manifest.json is not valid JSON")
+	else:
+		_warn("plateau/manifest.json missing")
+
+	# Meshes are generated, not committed. Verify the format when present.
+	var present := 0
+	var checked := 0
+	var bad := 0
+	for t: Dictionary in tiles:
+		var rel := String(t.get("file", ""))
+		if rel.is_empty() or checked >= 5:
+			continue
+		var path := "res://assets/plateau/" + rel
+		if not FileAccess.file_exists(path):
+			continue
+		present += 1
+		checked += 1
+		var bytes := FileAccess.get_file_as_bytes(path)
+		if bytes.size() < 44 or bytes.slice(0, 4).get_string_from_ascii() != "PMSH":
+			bad += 1
+			continue
+		var vcount := bytes.decode_u32(8)
+		var icount := bytes.decode_u32(12)
+		if bytes.size() != 44 + vcount * 24 + icount * 4:
+			bad += 1
+
+	if present == 0:
+		_warn("PLATEAU meshes not generated yet (gitignored; run tools/fetch_plateau.py)")
+	elif bad == 0:
+		_pass("sampled %d PLATEAU .pmesh files are structurally valid" % present)
+	else:
+		_fail("%d sampled PLATEAU .pmesh files are malformed" % bad)
 
 
 func _check_assets() -> void:

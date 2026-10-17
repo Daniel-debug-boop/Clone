@@ -25,6 +25,7 @@ and produces a Linux x86_64 desktop build.
 | Pause menu, save game, quit-to-menu | Implemented |
 | Objective loop: restore 8 lanterns at real Kyoto landmarks | Implemented, tested |
 | Headless validation + runtime smoke test | Implemented, tested |
+| Kyoto PLATEAU 3D building geometry (193 tiles) + streaming loader | Implemented, tested |
 | Linux export + packaged-build smoke test + SHA-256 archive | Implemented, tested |
 | Terrain3D native GDExtension | **Not integrated** — see `BUILD.md` |
 | Rigged humanoid character model | **Not integrated** — capsule proxy is used, see `ASSET_MANIFEST.md` |
@@ -72,13 +73,14 @@ world data, validates, smoke-tests, exports and archives the build.
 ### Locally on Linux
 
 ```bash
-python3 -m pip install pillow numpy
+python3 -m pip install pillow numpy DracoPy
 python3 tools/build_world.py        # real Kyoto DEM + OSM data
 python3 tools/fetch_assets.py       # Poly Haven CC0 materials + HDRI
+python3 tools/fetch_plateau.py      # PLATEAU Kyoto building geometry (optional; DracoPy required)
 bash tools/build_release.sh         # downloads Godot, builds, tests, packages
 ```
 
-See [`BUILD.md`](BUILD.md) for requirements, the Terrain3D evaluation and troubleshooting.
+See [`BUILD.md`](BUILD.md) for requirements, the Terrain3D evaluation, PLATEAU setup, and troubleshooting.
 
 ---
 
@@ -120,7 +122,7 @@ assets/terrain/            DEM-derived heightmap + metadata (real)
 assets/world/              OSM roads/buildings, JSON sources + compact binaries
 assets/textures/           Poly Haven PBR sets (CC0)
 assets/hdri/               Poly Haven HDRI (CC0)
-tools/                     build_world.py, fetch_assets.py, build_release.sh, manifests
+tools/                     build_world.py, fetch_assets.py, fetch_plateau.py, build_release.sh, manifests
 notebooks/                 Colab builder
 tests/                     validate_project.gd, smoke_test.gd/.tscn
 docs/                      feature matrix, test report
@@ -144,7 +146,7 @@ docs/                      feature matrix, test report
 
 This is an **implemented, playable vertical slice** of a real Japanese location — not a
 completed commercial open-world game. The region is deliberately bounded to a 4 km square so
-that terrain, roads, buildings, collision, streaming and performance can actually be validated.
+that terrain, roads, buildings, PLATEAU 3D city geometry, collision, streaming and performance can actually be validated.
 Expanding the region is a matter of changing the bounding box in `tools/build_world.py` and
 re-running the pipeline; the streaming architecture already supports it.
 

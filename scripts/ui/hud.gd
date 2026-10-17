@@ -159,7 +159,7 @@ func _build_pause_menu(root: Control) -> void:
 	attribution.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	attribution.add_theme_font_size_override("font_size", 11)
 	attribution.add_theme_color_override("font_color", Color(0.72, 0.77, 0.84, 0.7))
-	attribution.text = "Terrain: Mapzen / AWS Terrain Tiles (SRTM, USGS). Map data © OpenStreetMap contributors (ODbL 1.0). Materials: Poly Haven (CC0 1.0). Engine: Godot (MIT)."
+	attribution.text = "Terrain: Mapzen / AWS Terrain Tiles (SRTM, USGS). Map data © OpenStreetMap contributors (ODbL 1.0). 3D buildings: 国土交通省 PLATEAU, 「実在空間3D都市モデル」を加工して作成 (https://www.mlit.go.jp/plateau/). Materials: Poly Haven (CC0 1.0). Engine: Godot (MIT)."
 	_pause_menu.add_child(attribution)
 
 

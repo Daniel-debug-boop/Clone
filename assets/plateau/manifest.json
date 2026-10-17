@@ -1,0 +1,57 @@
+{
+  "source": "PLATEAU (Project PLATEAU, MLIT Japan)",
+  "portal": "https://www.mlit.go.jp/plateau/",
+  "catalog_api": "https://api.plateauview.mlit.go.jp/datacatalog/plateau-datasets",
+  "licence": "Public Data License 1.0 (PDL 1.0, 公共データ利用規約 第1.0版) - MLIT terms of use for Project PLATEAU; MLIT states this is compatible with CC BY 4.0", "licence_cc_by_compatible": true,
+  "attribution": "3D city model data: Project PLATEAU, Ministry of Land, Infrastructure, Transport and Tourism (Japan)",
+  "cartography_approval": "PLATEAU data is published for open use; see the portal for the current terms.",
+  "wards": [
+    {
+      "id": "26102_bldg_lod2_no_texture",
+      "url": "https://assets.cms.plateau.reearth.io/assets/4e/75ed90-a912-447a-8013-0868b9e91b22/26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_26102_kamigyo-ku_lod2_no_texture/tileset.json",
+      "tiles_written": 43,
+      "vertices": 1147416,
+      "triangles": 382472,
+      "skipped": 0
+    },
+    {
+      "id": "26103_bldg_lod2_no_texture",
+      "url": "https://assets.cms.plateau.reearth.io/assets/39/1d59ba-57ab-46b9-8433-d8a0ee0016d9/26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_26103_sakyo-ku_lod2_no_texture/tileset.json",
+      "tiles_written": 40,
+      "vertices": 1053162,
+      "triangles": 351054,
+      "skipped": 0
+    },
+    {
+      "id": "26104_bldg_lod2_no_texture",
+      "url": "https://assets.cms.plateau.reearth.io/assets/1a/bba122-47e9-45f6-bf4e-f8ce0dce172f/26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_26104_nakagyo-ku_lod2_no_texture/tileset.json",
+      "tiles_written": 42,
+      "vertices": 1449252,
+      "triangles": 483084,
+      "skipped": 0
+    },
+    {
+      "id": "26105_bldg_lod2_no_texture",
+      "url": "https://assets.cms.plateau.reearth.io/assets/f6/af38ee-5eae-4032-a861-fb460adecd16/26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_26105_higashiyama-ku_lod2_no_texture/tileset.json",
+      "tiles_written": 39,
+      "vertices": 1072482,
+      "triangles": 357494,
+      "skipped": 0
+    },
+    {
+      "id": "26106_bldg_lod2_no_texture",
+      "url": "https://assets.cms.plateau.reearth.io/assets/1a/742b55-cd5f-460e-991c-f3b03242f2db/26100_kyoto-shi_city_2025_citygml_1_op_bldg_3dtiles_26106_shimogyo-ku_lod2_no_texture/tileset.json",
+      "tiles_written": 29,
+      "vertices": 1116312,
+      "triangles": 372104,
+      "skipped": 0
+    }
+  ],
+  "totals": {
+    "tiles": 193,
+    "vertices": 5838624,
+    "triangles": 1946208
+  },
+  "vertical_offset_m": -30.44,
+  "generated_utc": "2026-10-17T11:19:10Z"
+}
