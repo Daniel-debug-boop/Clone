@@ -112,6 +112,18 @@ func _shot_materials() -> void:
 	await _save("05_materials", from, at, 45.0)
 
 func _save(name: String, from: Vector3, at: Vector3, fov: float) -> void:
+	# Position the main camera at the shot's viewpoint before capturing.
+	# Otherwise every screenshot records the same view.
+	var cam := _world.get_viewport().get_camera_3d() if _world != null else null
+	if cam == null:
+		cam = get_viewport().get_camera_3d()
+	if cam != null:
+		cam.global_position = from
+		cam.fov = fov
+		cam.look_at(at, Vector3.UP)
+		# Give the camera a couple of frames to settle.
+		await get_tree().process_frame
+		await get_tree().process_frame
 	# Capture via the main viewport. In headless GL mode the viewport
 	# texture may be non-readable; this is best-effort.
 	var vp := get_viewport()
